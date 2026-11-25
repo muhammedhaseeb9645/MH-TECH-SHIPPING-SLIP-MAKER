@@ -79,7 +79,7 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
     padding: 0 !important;
     background: #fff !important;
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     overflow: hidden !important;
   }
   #slip {
@@ -100,7 +100,7 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
 <body>
 <header>
   <strong>MH TECH <span style="color:#aaa">/</span> SHIPPING SLIP MAKER</strong>
-  <span>SLIP-ONLY PRINT • AUTO-SAVED</span>
+  <span>AUTO-FIT SINGLE PAGE • AUTO-SAVED</span>
 </header>
 <main>
 <section class="panel editor">
@@ -134,8 +134,8 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
   <div class="field"><label>Height (mm)</label><input type="number" id="customH" value="105" min="50" max="500"></div>
 </div>
 <div class="field">
-  <label>Fit Scale (<span id="scaleVal">95</span>%)</label>
-  <input type="range" id="slipScale" min="35" max="115" value="95" style="padding:0">
+  <label>Manual Size Adjust (<span id="scaleVal">100</span>%)</label>
+  <input type="range" id="slipScale" min="50" max="140" value="100" style="padding:0">
 </div>
 
 <h3>3. Courier & Safety Symbols</h3>
@@ -173,10 +173,10 @@ PIN. 695004</textarea></div>
 <div class="field"><label>Footer note</label><input id="footerNote" value="HANDLE WITH CARE • THANK YOU"></div>
 
 <div class="actions">
-  <button class="primary" onclick="window.print()">🖨️ PRINT SLIP ONLY</button>
+  <button class="primary" onclick="triggerSinglePagePrint()">🖨️ PRINT SLIP (AUTO FIT 1 PAGE)</button>
   <button class="secondary" onclick="resetSlip()">RESET DEFAULT DETAILS</button>
 </div>
-<p class="note"><strong>Print Tip:</strong> Only the shipping slip will print. Set <b>Margins</b> to <b>Default</b> or <b>None</b> in the print dialog.</p>
+<p class="note"><strong>Auto Fit Active:</strong> Automatically scales to fit inside A4 / A5 / box labels on a single page without extra pages or tiny output.</p>
 </section>
 
 <section class="panel preview-panel">
@@ -205,7 +205,7 @@ PIN. 695004</textarea></div>
 <div class="footer"><span id="pFooter"></span><span id="pFooterBrand">MH TECH • NIKSHAN CARE</span></div>
 </article>
 </div>
-<p class="note">Preview shows relative paper/label proportions and scale. All your edits and shop logo are saved locally without data loss.</p>
+<p class="note">Preview shows relative paper/label proportions. All your edits and shop logo are saved locally without data loss.</p>
 </section>
 </main>
 
@@ -223,6 +223,7 @@ const SYMBOLS_DATA = {
   battery: { html: `<svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><path d="M11 9l-2 3h3l-1 3" stroke-width="1.8"/></svg>LITHIUM<br>BATTERY` }
 };
 
+// Dimensions in mm
 const PRESET_DIMS = {
   'A5 landscape': { w: 210, h: 148 },
   'A5 portrait': { w: 148, h: 210 },
@@ -257,22 +258,56 @@ function getEffectiveDimensions() {
   return { w: d.w, h: d.h, pageRule: preset };
 }
 
+// Calculates optimal single-page zoom so slip fills A4/A5/label nicely without overflowing to a 2nd page
+function computeSinglePageZoom() {
+  const { w, h } = getEffectiveDimensions();
+  const manualFactor = (Number(document.getElementById('slipScale').value) || 100) / 100;
+
+  // Convert mm to px at ~96 DPI (1mm = 3.7795px), leaving ~8mm margin around page
+  const printableWpx = Math.max(200, (w - 8) * 3.7795);
+  const printableHpx = Math.max(200, (h - 8) * 3.7795);
+
+  const slipEl = document.getElementById('slip');
+  // Base design width reference is 680px
+  const baseWidth = 680;
+  const widthRatio = printableWpx / baseWidth;
+
+  // Measure actual rendered height at baseWidth
+  const prevZoom = slipEl.style.zoom;
+  const prevWidth = slipEl.style.width;
+  slipEl.style.zoom = '1';
+  slipEl.style.width = baseWidth + 'px';
+  const naturalH = slipEl.scrollHeight || 460;
+  slipEl.style.zoom = prevZoom;
+  slipEl.style.width = prevWidth;
+
+  const heightRatio = printableHpx / (naturalH * widthRatio);
+
+  // Fit inside both width and height of the page, capped cleanly at 0.98 of page height so it stays 1 page
+  let fitZoom = widthRatio * Math.min(1, heightRatio * 0.96);
+
+  // Ensure A4 / A5 has a strong, readable size rather than looking tiny
+  fitZoom = fitZoom * manualFactor;
+  return Math.max(0.35, Math.min(1.6, fitZoom));
+}
+
 function updateSizeAndScale() {
   const preset = document.getElementById('printPreset').value;
   document.getElementById('customSizeBox').style.display = preset === 'custom' ? 'grid' : 'none';
 
-  const scalePercent = Number(document.getElementById('slipScale').value) || 95;
+  const scalePercent = Number(document.getElementById('slipScale').value) || 100;
   document.getElementById('scaleVal').textContent = scalePercent;
 
   const { w, h, pageRule } = getEffectiveDimensions();
   const slipEl = document.getElementById('slip');
 
-  const basePreviewPx = Math.min(760, Math.max(320, w * 3.1));
-  slipEl.style.width = (basePreviewPx * (scalePercent / 100)) + 'px';
-  slipEl.style.padding = scalePercent < 70 ? '10px' : '16px';
+  // Preview sizing proportional to chosen paper/label
+  const aspectRatio = w / h;
+  const previewMaxW = Math.min(760, Math.max(320, w * 2.8));
+  slipEl.style.width = (previewMaxW * (scalePercent / 100)) + 'px';
 
-  const zoomFactor = (scalePercent / 100) * Math.min(1, (w / 210) * 1.15);
-  const clampedZoom = Math.max(0.35, Math.min(1.25, zoomFactor)).toFixed(3);
+  const singlePageZoom = computeSinglePageZoom().toFixed(3);
+  const inverseWidthPercent = (100 / Number(singlePageZoom)).toFixed(2);
 
   const styleTag = document.getElementById('dynamicPrintStyle');
   styleTag.textContent = `
@@ -282,13 +317,21 @@ function updateSizeAndScale() {
         margin: 4mm;
       }
       #slip {
-        width: calc(100% / ${clampedZoom}) !important;
-        zoom: ${clampedZoom} !important;
-        border-width: ${scalePercent < 65 ? '2px' : '3px'} !important;
+        width: ${inverseWidthPercent}% !important;
+        zoom: ${singlePageZoom} !important;
       }
     }
   `;
 }
+
+function triggerSinglePagePrint() {
+  updateSizeAndScale();
+  setTimeout(() => {
+    window.print();
+  }, 60);
+}
+
+window.addEventListener('beforeprint', updateSizeAndScale);
 
 function handleSizeChange() {
   const preset = document.getElementById('printPreset').value;
@@ -419,7 +462,7 @@ function resetSlip() {
     printPreset: 'A5 landscape',
     customW: '210',
     customH: '148',
-    slipScale: '95'
+    slipScale: '100'
   };
   Object.entries(d).forEach(([k, v]) => {
     if (document.getElementById(k)) document.getElementById(k).value = v;
