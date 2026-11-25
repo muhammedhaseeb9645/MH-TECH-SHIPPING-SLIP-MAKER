@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MH TECH | Shipping Slip Maker</title>
+<style>
+:root{--ink:#111;--muted:#666;--line:#222;--paper:#fff;--bg:#ececec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{background:#111;color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header strong{font-size:18px;letter-spacing:1.2px} header span{font-size:12px;color:#ccc}
+main{max-width:1260px;margin:22px auto;padding:0 14px;display:grid;grid-template-columns:360px minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:#fff;border:1px solid #ddd;border-radius:14px;padding:18px;box-shadow:0 5px 20px #0000000b}
+h2{font-size:15px;margin:0 0 14px;text-transform:uppercase;letter-spacing:1px}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:18px 0 10px;color:#555;border-top:1px solid #eee;padding-top:12px}
+.field{display:block;margin:10px 0}
+.field label{display:block;font-size:11px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input,textarea,select{width:100%;border:1px solid #ccc;border-radius:7px;padding:9px 10px;font:13px Arial;background:#fff;color:#111}
+textarea{min-height:60px;resize:vertical}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.logo-controls{display:flex;gap:8px;align-items:center}
+.logo-controls input[type="file"]{padding:6px;font-size:12px}
+.symbol-list{display:grid;grid-template-columns:1fr;gap:6px;background:#f9f9f9;padding:10px;border-radius:8px;border:1px solid #e0e0e0}
+.symbol-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;cursor:pointer;padding:3px 0}
+.symbol-item input[type="checkbox"]{width:16px;height:16px;margin:0;cursor:pointer;accent-color:#111}
+.actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:16px}
+button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;font-size:13px}
+.primary{background:#111;color:#fff;font-size:14px;letter-spacing:.5px}.secondary{background:#eee;color:#111;border:1px solid #ccc}.danger-btn{background:#fee;color:#b00;border:1px solid #fcc;padding:8px 10px;font-size:11px;white-space:nowrap}
+.preview-wrap{overflow:auto;padding:8px;display:flex;justify-content:center}
+.slip{width:100%;min-width:620px;max-width:850px;background:#fff;border:3px solid #111;border-radius:16px;padding:18px;box-shadow:0 8px 30px #00000012;transform-origin:top center}
+.slip-head{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding:0 0 13px;margin-bottom:13px;gap:12px}
+.brandmark{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:800;letter-spacing:1px}
+.shop-logo-img{max-height:54px;max-width:180px;object-fit:contain;display:none}
+.cube{width:42px;height:38px;border:3px solid #111;transform:skewY(-8deg);display:grid;place-items:center;font-size:10px}
+.heading{background:#111;color:#fff;padding:10px 22px;font-size:clamp(19px,3vw,29px);font-weight:900;letter-spacing:1.5px;white-space:nowrap}
+.from-row{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:12px;margin-bottom:12px}
+.address-box{border:2px solid #111;border-radius:12px;padding:13px;display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;min-height:145px}
+.tag{background:#111;color:#fff;font-weight:900;padding:9px 10px;text-align:center;font-size:16px}
+.details{border-left:2px solid #111;padding-left:14px;line-height:1.35;overflow-wrap:anywhere}
+.person{font-size:21px;font-weight:900;margin-bottom:3px}
+.address{font-size:16px;font-weight:700;white-space:pre-line}
+.phones{font-size:15px;font-weight:800;margin-top:8px;line-height:1.5}
+.box-info{border-left:2px solid #111;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8px}
+.box-icon{font-size:52px;line-height:1}
+.box-info strong{font-size:17px;margin-top:10px}
+.to-row{border:2px solid #111;border-radius:12px;padding:13px;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;min-height:250px}
+.to-address{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center}
+.to-address .details{min-height:210px;display:flex;flex-direction:column;justify-content:center}
+.to-address .person{font-size:25px}
+.to-address .address{font-size:17px}
+.handling{border-left:2px solid #111;padding-left:12px;display:flex;flex-direction:column;justify-content:space-between}
+.icons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.handle{border:2px solid #111;border-radius:8px;text-align:center;padding:6px 3px;font-size:9px;font-weight:900;line-height:1.15;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.handle .symbol{display:block;font-size:24px;margin-bottom:4px;line-height:1}
+.handle svg{width:26px;height:26px;margin-bottom:4px;stroke:#111;fill:none;stroke-width:2}
+.barcode{height:50px;display:flex;align-items:stretch;gap:2px;overflow:hidden;margin-top:12px}
+.barcode i{display:block;background:#111;height:100%}
+.footer{display:flex;justify-content:space-between;gap:10px;border-top:2px solid #111;margin-top:12px;padding-top:8px;font-size:10px;font-weight:700;letter-spacing:.7px}
+.note{font-size:11px;color:#666;margin:12px 2px 0}
+.saved-badge{font-size:11px;color:#0a7a28;font-weight:700;margin-left:6px}
+@media(max-width:900px){main{grid-template-columns:1fr}.panel{order:1}.preview-panel{order:2}.slip{min-width:620px}}
+@media print{
+ body{background:#fff;margin:0;padding:0}
+ header,.editor,.note,h2{display:none!important}
+ main{display:block;margin:0;padding:0;max-width:none}
+ .panel{border:0;box-shadow:none;padding:0;margin:0}
+ .preview-wrap{padding:0;overflow:visible;display:block}
+ .slip{max-width:none;min-width:0;border-radius:8px;box-shadow:none;padding:10px;margin:0 auto}
+}
+</style>
+<style id="dynamicPrintStyle"></style>
+</head>
+<body>
+<header>
+  <strong>MH TECH <span style="color:#aaa">/</span> SHIPPING SLIP MAKER</strong>
+  <span>AUTO-SAVED IN BROWSER • PRINT READY</span>
+</header>
+<main>
+<section class="panel editor">
+<h2>Slip Details <span class="saved-badge" id="saveStatus">✓ Saved</span></h2>
+
+<h3>1. Shop Logo (Saved Locally)</h3>
+<div class="field">
+  <label>Pick & Save Shop Logo</label>
+  <div class="logo-controls">
+    <input type="file" id="logoPicker" accept="image/*">
+    <button type="button" class="danger-btn" id="removeLogoBtn" onclick="removeLogo()" style="display:none">Remove</button>
+  </div>
+</div>
+
+<h3>2. Print & Box Size Setup</h3>
+<div class="field">
+  <label>Box / Label Size Preset</label>
+  <select id="printPreset" onchange="handlePresetChange()">
+    <option value="A5 landscape">A5 Landscape (Standard Medium Box)</option>
+    <option value="A4 landscape">A4 Landscape (Large Box)</option>
+    <option value="A4 portrait">A4 Portrait (Half Sheet)</option>
+    <option value="100mm 150mm">4 x 6 Inch Thermal Label (100x150mm)</option>
+    <option value="100mm 100mm">4 x 4 Inch Small Box Label (100x100mm)</option>
+    <option value="custom">Custom Box Size (mm)</option>
+  </select>
+</div>
+<div class="row-2" id="customSizeBox" style="display:none">
+  <div class="field"><label>Width (mm)</label><input type="number" id="customW" value="150" min="50" max="500"></div>
+  <div class="field"><label>Height (mm)</label><input type="number" id="customH" value="100" min="50" max="500"></div>
+</div>
+<div class="field">
+  <label>Slip Scale / Fit to Box (<span id="scaleVal">100</span>%)</label>
+  <input type="range" id="slipScale" min="50" max="120" value="100" style="padding:0">
+</div>
+
+<h3>3. Courier & Safety Symbols</h3>
+<div class="symbol-list" id="symbolCheckboxes">
+  <label class="symbol-item"><input type="checkbox" value="up" checked> ⬆⬆ THIS SIDE UP</label>
+  <label class="symbol-item"><input type="checkbox" value="fragile" checked> ♢ FRAGILE - HANDLE WITH CARE</label>
+  <label class="symbol-item"><input type="checkbox" value="dry" checked> ☂ KEEP DRY</label>
+  <label class="symbol-item"><input type="checkbox" value="electronics" checked> ⚡ ELECTRONICS PROTECTION (ESD SAFE)</label>
+  <label class="symbol-item"><input type="checkbox" value="nostack"> ⛒ DO NOT STACK</label>
+  <label class="symbol-item"><input type="checkbox" value="battery"> 🔋 LITHIUM BATTERY INSIDE</label>
+</div>
+
+<h3>4. From / Sender</h3>
+<div class="field"><label>Sender name</label><input id="fromName" value="MUHAMMEDHASEEB MHTECH"></div>
+<div class="field"><label>Business / shop</label><input id="fromShop" value="NIKSHAN CARE"></div>
+<div class="field"><label>Address</label><textarea id="fromAddress">KOTTOLI
+CALICUT
+Kerala 673016</textarea></div>
+<div class="field"><label>Phone numbers</label><textarea id="fromPhones">+91 8089461833
++91 7034512710</textarea></div>
+
+<h3>5. To / Receiver</h3>
+<div class="field"><label>Receiver / company</label><input id="toName" value="ERepair Innovative"></div>
+<div class="field"><label>Address</label><textarea id="toAddress">SHALOM BUILDING
+L. I. C. JUN.
+PATTOM
+TRIVANDRUM
+KERALA
+PIN. 695004</textarea></div>
+<div class="field"><label>Phone numbers</label><textarea id="toPhones">8075633244
+9074633244</textarea></div>
+
+<h3>6. Package & Footer</h3>
+<div class="field"><label>Package label</label><input id="package" value="SMALL BOX"></div>
+<div class="field"><label>Footer note</label><input id="footerNote" value="HANDLE WITH CARE • THANK YOU"></div>
+
+<div class="actions">
+  <button class="primary" onclick="window.print()">🖨️ PRINT SLIP</button>
+  <button class="secondary" onclick="resetSlip()">RESET DEFAULT DETAILS</button>
+</div>
+<p class="note">All text, logo, symbols, and print size settings are automatically saved in your browser.</p>
+</section>
+
+<section class="panel preview-panel">
+<h2>Live Preview</h2>
+<div class="preview-wrap">
+<article class="slip" id="slip">
+<div class="slip-head">
+  <div class="brandmark">
+    <img id="pShopLogo" class="shop-logo-img" alt="Shop Logo">
+    <div class="cube" id="defaultCube">BOX</div>
+    <span id="pBrandText">PARCEL DISPATCH</span>
+  </div>
+  <div class="heading">SHIPPING SLIP</div>
+</div>
+<div class="from-row">
+<div class="address-box"><div class="tag">FROM</div><div class="details"><div class="person" id="pFromName"></div><div class="address"><b id="pFromShop"></b><br><span id="pFromAddress"></span></div><div class="phones" id="pFromPhones"></div></div></div>
+<div class="box-info"><div class="box-icon">▱</div><strong id="pPackage"></strong></div>
+</div>
+<div class="to-row">
+<div class="to-address"><div class="tag">TO</div><div class="details"><div class="person" id="pToName"></div><div class="address" id="pToAddress"></div><div class="phones" id="pToPhones"></div></div></div>
+<div class="handling">
+<div class="icons" id="pIcons"></div>
+<div class="barcode" id="barcode" aria-label="Decorative barcode"></div>
+</div>
+</div>
+<div class="footer"><span id="pFooter"></span><span id="pFooterBrand">MH TECH • NIKSHAN CARE</span></div>
+</article>
+</div>
+<p class="note">Adjust "Box / Label Size Preset" and "Slip Scale" on the left to match your box size before printing.</p>
+</section>
+</main>
+
+<script>
+const STORAGE_KEY = 'mhtech_shipping_slip_v2';
+const LOGO_KEY = 'mhtech_shop_logo_v2';
+
+const SYMBOLS_DATA = {
+  up: {
+    html: `<span class="symbol">⬆⬆</span>THIS SIDE UP`
+  },
+  fragile: {
+    html: `<span class="symbol">♢</span>FRAGILE<br>HANDLE WITH CARE`
+  },
+  dry: {
+    html: `<span class="symbol">☂</span>KEEP DRY`
+  },
+  electronics: {
+    html: `<svg viewBox="0 0 24 24"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/><path d="M13 7l-4 6h4l-1 4 4-6h-4l1-4z" fill="#111" stroke="none"/></svg>ELECTRONICS<br>ESD PROTECT`
+  },
+  nostack: {
+    html: `<span class="symbol">⛒</span>DO NOT<br>STACK`
+  },
+  battery: {
+    html: `<svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><path d="M11 9l-2 3h3l-1 3" stroke-width="1.8"/></svg>LITHIUM<br>BATTERY`
+  }
+};
+
+const ids = ['fromName','fromShop','fromAddress','fromPhones','toName','toAddress','toPhones','package','footerNote','printPreset','customW','customH','slipScale'];
+const map = {fromName:'pFromName',fromShop:'pFromShop',fromAddress:'pFromAddress',fromPhones:'pFromPhones',toName:'pToName',toAddress:'pToAddress',toPhones:'pToPhones',package:'pPackage',footerNote:'pFooter'};
+
+function getSelectedSymbols() {
+  return Array.from(document.querySelectorAll('#symbolCheckboxes input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+
+function renderSymbols() {
+  const container = document.getElementById('pIcons');
+  const selected = getSelectedSymbols();
+  container.innerHTML = selected.map(key => `<div class="handle">${SYMBOLS_DATA[key].html}</div>`).join('');
+}
+
+function updatePrintStyles() {
+  const preset = document.getElementById('printPreset').value;
+  const w = document.getElementById('customW').value || 150;
+  const h = document.getElementById('customH').value || 100;
+  const scale = (document.getElementById('slipScale').value || 100) / 100;
+
+  document.getElementById('scaleVal').textContent = Math.round(scale * 100);
+  document.getElementById('customSizeBox').style.display = preset === 'custom' ? 'grid' : 'none';
+
+  const pageSize = preset === 'custom' ? `${w}mm ${h}mm` : preset;
+  const styleTag = document.getElementById('dynamicPrintStyle');
+  styleTag.textContent = `
+    @media print {
+      @page { size: ${pageSize}; margin: 5mm; }
+      .slip {
+        width: ${100 / scale}% !important;
+        transform: scale(${scale});
+        transform-origin: top left;
+      }
+    }
+  `;
+}
+
+function handlePresetChange() {
+  updatePrintStyles();
+  saveData();
+}
+
+function saveData() {
+  const data = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  data.symbols = getSelectedSymbols();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+  const status = document.getElementById('saveStatus');
+  status.textContent = '✓ Saved';
+  status.style.opacity = '1';
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      ids.forEach(id => {
+        if (data[id] !== undefined && document.getElementById(id)) {
+          document.getElementById(id).value = data[id];
+        }
+      });
+      if (Array.isArray(data.symbols)) {
+        document.querySelectorAll('#symbolCheckboxes input[type="checkbox"]').forEach(cb => {
+          cb.checked = data.symbols.includes(cb.value);
+        });
+      }
+    } catch (e) {}
+  }
+
+  const savedLogo = localStorage.getItem(LOGO_KEY);
+  if (savedLogo) {
+    applyLogo(savedLogo);
+  }
+}
+
+function applyLogo(dataUrl) {
+  const img = document.getElementById('pShopLogo');
+  const cube = document.getElementById('defaultCube');
+  const removeBtn = document.getElementById('removeLogoBtn');
+  if (dataUrl) {
+    img.src = dataUrl;
+    img.style.display = 'block';
+    cube.style.display = 'none';
+    removeBtn.style.display = 'inline-block';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    cube.style.display = 'grid';
+    removeBtn.style.display = 'none';
+  }
+}
+
+document.getElementById('logoPicker').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = new Image();
+    img.onload = function() {
+      // Resize image lightly to ensure safe localStorage quota usage
+      const canvas = document.createElement('canvas');
+      const maxH = 160;
+      const ratio = Math.min(1, maxH / img.height);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const compressed = canvas.toDataURL('image/png');
+      localStorage.setItem(LOGO_KEY, compressed);
+      applyLogo(compressed);
+      saveData();
+    };
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function removeLogo() {
+  localStorage.removeItem(LOGO_KEY);
+  document.getElementById('logoPicker').value = '';
+  applyLogo(null);
+}
+
+function update() {
+  ids.forEach(id => {
+    const el = document.getElementById(id), out = document.getElementById(map[id]);
+    if (out && el) out.textContent = el.value;
+  });
+  document.getElementById('pFromPhones').textContent = document.getElementById('fromPhones').value.split('\n').filter(Boolean).map(x => '☎ ' + x).join('\n');
+  document.getElementById('pToPhones').textContent = document.getElementById('toPhones').value.split('\n').filter(Boolean).map(x => '☎ ' + x).join('\n');
+  document.getElementById('pFooterBrand').textContent = `${document.getElementById('fromName').value.split(' ')[0] || 'MH TECH'} • ${document.getElementById('fromShop').value || 'DISPATCH'}`;
+  renderSymbols();
+  updatePrintStyles();
+  saveData();
+}
+
+ids.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', update);
+});
+
+document.querySelectorAll('#symbolCheckboxes input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', update);
+});
+
+function resetSlip() {
+  if (!confirm('Reset text fields to default details? (Your saved Shop Logo will be kept)')) return;
+  const d = {
+    fromName: 'MUHAMMEDHASEEB MHTECH',
+    fromShop: 'NIKSHAN CARE',
+    fromAddress: 'KOTTOLI\nCALICUT\nKerala 673016',
+    fromPhones: '+91 8089461833\n+91 7034512710',
+    toName: 'ERepair Innovative',
+    toAddress: 'SHALOM BUILDING\nL. I. C. JUN.\nPATTOM\nTRIVANDRUM\nKERALA\nPIN. 695004',
+    toPhones: '8075633244\n9074633244',
+    package: 'SMALL BOX',
+    footerNote: 'HANDLE WITH CARE • THANK YOU',
+    printPreset: 'A5 landscape',
+    slipScale: '100'
+  };
+  Object.entries(d).forEach(([k, v]) => {
+    if (document.getElementById(k)) document.getElementById(k).value = v;
+  });
+  update();
+}
+
+// Generate Decorative Barcode
+const barcode = document.getElementById('barcode');
+let seed = 78341;
+for (let i = 0; i < 95; i++) {
+  seed = (seed * 9301 + 49297) % 233280;
+  const bar = document.createElement('i');
+  bar.style.width = (1 + (seed % 4)) + 'px';
+  if (seed % 5 === 0) bar.style.marginRight = '2px';
+  barcode.appendChild(bar);
+}
+
+// Initialize without data loss
+loadData();
+update();
+</script>
+</body>
+</html>
