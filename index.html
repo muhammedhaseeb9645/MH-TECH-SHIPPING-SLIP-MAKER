@@ -45,9 +45,9 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
 .box-info{border-left:2px solid #111;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6px}
 .box-icon{font-size:46px;line-height:1}
 .box-info strong{font-size:15px;margin-top:8px}
-.to-row{border:2px solid #111;border-radius:10px;padding:11px;display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:10px}
+.to-row{border:2px solid #111;border-radius:10px;padding:11px;display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:10px;min-height:220px}
 .to-address{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:center}
-.to-address .details{display:flex;flex-direction:column;justify-content:center}
+.to-address .details{min-height:185px;display:flex;flex-direction:column;justify-content:center}
 .to-address .person{font-size:23px}
 .to-address .address{font-size:16px}
 .handling{border-left:2px solid #111;padding-left:10px;display:flex;flex-direction:column;justify-content:space-between}
@@ -160,15 +160,9 @@ Kerala 673016</textarea></div>
 +91 7034512710</textarea></div>
 
 <h3>5. To / Receiver</h3>
-<div class="field"><label>Receiver / company</label><input id="toName" value="ERepair Innovative"></div>
-<div class="field"><label>Address</label><textarea id="toAddress">SHALOM BUILDING
-L. I. C. JUN.
-PATTOM
-TRIVANDRUM
-KERALA
-PIN. 695004</textarea></div>
-<div class="field"><label>Phone numbers</label><textarea id="toPhones">8075633244
-9074633244</textarea></div>
+<div class="field"><label>Receiver / company</label><input id="toName" value="" placeholder="Enter receiver name or company"></div>
+<div class="field"><label>Address</label><textarea id="toAddress" placeholder="Enter receiver address"></textarea></div>
+<div class="field"><label>Phone numbers</label><textarea id="toPhones" placeholder="Enter phone numbers"></textarea></div>
 
 <h3>6. Package & Footer</h3>
 <div class="field"><label>Package label</label><input id="package" value="SMALL BOX"></div>
@@ -457,9 +451,9 @@ function resetSlip() {
     fromShop: 'NIKSHAN CARE',
     fromAddress: 'KOTTOLI\nCALICUT\nKerala 673016',
     fromPhones: '+91 8089461833\n+91 7034512710',
-    toName: 'MHTECH',
-    toAddress: 'MHTECH\nL. I. C. JUN.\nkpl\nkozhikode\nKERALA\nPIN. 673003',
-    toPhones: '000000000\n00000000000',
+    toName: '',
+    toAddress: '',
+    toPhones: '',
     package: 'SMALL BOX',
     footerNote: 'HANDLE WITH CARE • THANK YOU',
     printPreset: 'A5 landscape',
