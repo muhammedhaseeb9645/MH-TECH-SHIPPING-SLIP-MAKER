@@ -100,7 +100,7 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
 <body>
 <header>
   <strong>MH TECH <span style="color:#aaa">/</span> SHIPPING SLIP MAKER</strong>
-  <span>AUTO-FIT SINGLE PAGE • AUTO-SAVED</span>
+  <span>STRICT 1-PAGE BOX FIT • AUTO-SAVED</span>
 </header>
 <main>
 <section class="panel editor">
@@ -134,7 +134,7 @@ button{border:0;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;fo
   <div class="field"><label>Height (mm)</label><input type="number" id="customH" value="105" min="50" max="500"></div>
 </div>
 <div class="field">
-  <label>Manual Size Adjust (<span id="scaleVal">100</span>%)</label>
+  <label>Manual Size Adjust (<span id="scaleVal">100</span>% — Auto Clamped to 1 Page)</label>
   <input type="range" id="slipScale" min="50" max="140" value="100" style="padding:0">
 </div>
 
@@ -173,10 +173,10 @@ PIN. 695004</textarea></div>
 <div class="field"><label>Footer note</label><input id="footerNote" value="HANDLE WITH CARE • THANK YOU"></div>
 
 <div class="actions">
-  <button class="primary" onclick="triggerSinglePagePrint()">🖨️ PRINT SLIP (AUTO FIT 1 PAGE)</button>
+  <button class="primary" onclick="triggerSinglePagePrint()">🖨️ PRINT SLIP (SINGLE PAGE FIT)</button>
   <button class="secondary" onclick="resetSlip()">RESET DEFAULT DETAILS</button>
 </div>
-<p class="note"><strong>Auto Fit Active:</strong> Automatically scales to fit inside A4 / A5 / box labels on a single page without extra pages or tiny output.</p>
+<p class="note"><strong>Single-Page Guarantee:</strong> Even if you increase manual size, it automatically clamps to fit inside a single A4 / A5 / label page without spilling onto page 2 or 3.</p>
 </section>
 
 <section class="panel preview-panel">
@@ -223,7 +223,6 @@ const SYMBOLS_DATA = {
   battery: { html: `<svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><path d="M11 9l-2 3h3l-1 3" stroke-width="1.8"/></svg>LITHIUM<br>BATTERY` }
 };
 
-// Dimensions in mm
 const PRESET_DIMS = {
   'A5 landscape': { w: 210, h: 148 },
   'A5 portrait': { w: 148, h: 210 },
@@ -258,21 +257,22 @@ function getEffectiveDimensions() {
   return { w: d.w, h: d.h, pageRule: preset };
 }
 
-// Calculates optimal single-page zoom so slip fills A4/A5/label nicely without overflowing to a 2nd page
-function computeSinglePageZoom() {
+/**
+ * Strictly fits the slip onto a single page (A4 / A5 / Label / Custom)
+ * even when manual size is pushed higher, preventing 2-3 page spillovers.
+ */
+function fitToSinglePage() {
   const { w, h } = getEffectiveDimensions();
   const manualFactor = (Number(document.getElementById('slipScale').value) || 100) / 100;
 
-  // Convert mm to px at ~96 DPI (1mm = 3.7795px), leaving ~8mm margin around page
-  const printableWpx = Math.max(200, (w - 8) * 3.7795);
-  const printableHpx = Math.max(200, (h - 8) * 3.7795);
+  // Printable area in px (1mm ≈ 3.7795px) minus 8mm total margin
+  const printableWpx = Math.max(180, (w - 8) * 3.7795);
+  const printableHpx = Math.max(180, (h - 8) * 3.7795);
 
   const slipEl = document.getElementById('slip');
-  // Base design width reference is 680px
   const baseWidth = 680;
-  const widthRatio = printableWpx / baseWidth;
 
-  // Measure actual rendered height at baseWidth
+  // Measure natural height at reference width
   const prevZoom = slipEl.style.zoom;
   const prevWidth = slipEl.style.width;
   slipEl.style.zoom = '1';
@@ -281,14 +281,17 @@ function computeSinglePageZoom() {
   slipEl.style.zoom = prevZoom;
   slipEl.style.width = prevWidth;
 
-  const heightRatio = printableHpx / (naturalH * widthRatio);
+  // Maximum zoom allowed so BOTH width and height fit on 1 page
+  const maxWidthZoom = printableWpx / baseWidth;
+  const maxHeightZoom = (printableHpx * 0.94) / naturalH;
+  const strictMaxSinglePageZoom = Math.min(maxWidthZoom, maxHeightZoom);
 
-  // Fit inside both width and height of the page, capped cleanly at 0.98 of page height so it stays 1 page
-  let fitZoom = widthRatio * Math.min(1, heightRatio * 0.96);
+  // Desired zoom from manual slider
+  const desiredZoom = maxWidthZoom * manualFactor;
 
-  // Ensure A4 / A5 has a strong, readable size rather than looking tiny
-  fitZoom = fitZoom * manualFactor;
-  return Math.max(0.35, Math.min(1.6, fitZoom));
+  // Clamp strictly so manual enlargement never pushes content onto page 2 or 3
+  const finalZoom = Math.max(0.25, Math.min(strictMaxSinglePageZoom, desiredZoom));
+  return Number(finalZoom.toFixed(3));
 }
 
 function updateSizeAndScale() {
@@ -298,16 +301,15 @@ function updateSizeAndScale() {
   const scalePercent = Number(document.getElementById('slipScale').value) || 100;
   document.getElementById('scaleVal').textContent = scalePercent;
 
-  const { w, h, pageRule } = getEffectiveDimensions();
+  const { w, pageRule } = getEffectiveDimensions();
   const slipEl = document.getElementById('slip');
 
-  // Preview sizing proportional to chosen paper/label
-  const aspectRatio = w / h;
+  // Visual preview width
   const previewMaxW = Math.min(760, Math.max(320, w * 2.8));
   slipEl.style.width = (previewMaxW * (scalePercent / 100)) + 'px';
 
-  const singlePageZoom = computeSinglePageZoom().toFixed(3);
-  const inverseWidthPercent = (100 / Number(singlePageZoom)).toFixed(2);
+  const singlePageZoom = fitToSinglePage();
+  const inverseWidthPercent = (100 / singlePageZoom).toFixed(2);
 
   const styleTag = document.getElementById('dynamicPrintStyle');
   styleTag.textContent = `
